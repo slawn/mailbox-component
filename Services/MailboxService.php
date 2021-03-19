@@ -303,6 +303,15 @@ class MailboxService
             }
         }
 
+        // Save extracted TO email details - we will use it later with the CC field
+		$tempToUsedForCC = $addresses['to'];
+
+        // Check if email_to is passed and correct - it will be used as the TO email to fix issues with email forwarding and multiple TO emails
+		if(isset($this->requestStack->getCurrentRequest()->get('email_to')) && $this->requestStack->getCurrentRequest()->get('email_to') != false && filter_var($this->requestStack->getCurrentRequest()->get('email_to'), FILTER_VALIDATE_EMAIL)){
+			$addresses['to'] 	= [];
+			$addresses['to'][0] = strtolower($this->requestStack->getCurrentRequest()->get('email_to'));
+		}        
+
         // Process Mail - References
         $addresses['to'][0] = strtolower($addresses['to'][0]);
         $mailData['replyTo'] = $addresses['to'];
@@ -318,6 +327,17 @@ class MailboxService
         $mailData['role'] = 'ROLE_CUSTOMER';
         $mailData['from'] = $addresses['from'];
         $mailData['name'] = trim(current(explode('@', $from[0]['display'])));
+
+        // Putting other TO addresses into CC to have a trace of emails copied in the ticket. Without this other emails on the TO list would get lost
+        $mergedCC     = array_merge($tempToUsedForCC, $mailData['cc']); 
+		$finalCC      = [];
+		foreach($mergedCC as $oneEmail){
+			$oneEmail = mailparse_rfc822_parse_addresses(strtolower($oneEmail));
+			if($oneEmail[0]['address'] != $addresses['to'][0]){
+				$finalCC[] = $oneEmail[0]['address'];
+			}
+		}
+		$mailData['cc'] = array_unique($finalCC);
 
         // Process Mail - Content
         $htmlFilter = new HTMLFilter();

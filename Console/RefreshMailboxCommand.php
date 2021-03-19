@@ -104,7 +104,7 @@ class RefreshMailboxCommand extends Command
                 foreach ($emailCollection as $id => $messageNumber) {
                     $output->writeln("\n <comment> Converting email </comment><info>$counter</info><comment> out of </comment><info>$emailCount</info><comment>.</comment>");
                     $message = imap_fetchbody($imap, $messageNumber, "");
-                    $this->pushMessage($message, $useSecureConnection);
+                    $this->pushMessage($message, $useSecureConnection, $server_username);
                     $counter ++;
                 }
 
@@ -115,7 +115,7 @@ class RefreshMailboxCommand extends Command
         return;
     }
 
-    public function pushMessage($message, bool $secure = false)
+    public function pushMessage($message, bool $secure = false, $server_username = false)
     {
         $router = $this->container->get('router');
         $router->getContext()->setHost($this->container->getParameter('uvdesk.site_url'));
@@ -128,7 +128,7 @@ class RefreshMailboxCommand extends Command
         curl_setopt($curlHandler, CURLOPT_RETURNTRANSFER, 1);
         curl_setopt($curlHandler, CURLOPT_POST, 1);
         curl_setopt($curlHandler, CURLOPT_URL, $requestUrl);
-        curl_setopt($curlHandler, CURLOPT_POSTFIELDS, http_build_query(['email' => $message]));
+        curl_setopt($curlHandler, CURLOPT_POSTFIELDS, http_build_query(['email' => $message, 'email_to' => $server_username]));
 
         $curlResponse = curl_exec($curlHandler);
         curl_close($curlHandler);
