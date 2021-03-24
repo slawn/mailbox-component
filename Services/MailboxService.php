@@ -307,7 +307,7 @@ class MailboxService
 		$tempToUsedForCC = $addresses['to'];
 
         // Check if email_to is passed and correct - it will be used as the TO email to fix issues with email forwarding and multiple TO emails
-		if(isset($this->requestStack->getCurrentRequest()->get('email_to')) && $this->requestStack->getCurrentRequest()->get('email_to') != false && filter_var($this->requestStack->getCurrentRequest()->get('email_to'), FILTER_VALIDATE_EMAIL)){
+		if($this->requestStack->getCurrentRequest()->get('email_to') !== null && $this->requestStack->getCurrentRequest()->get('email_to') != false && filter_var($this->requestStack->getCurrentRequest()->get('email_to'), FILTER_VALIDATE_EMAIL)){
 			$addresses['to'] 	= [];
 			$addresses['to'][0] = strtolower($this->requestStack->getCurrentRequest()->get('email_to'));
 		}        
